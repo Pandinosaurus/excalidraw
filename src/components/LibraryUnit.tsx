@@ -1,13 +1,13 @@
-import React, { useRef, useEffect, useState } from "react";
 import clsx from "clsx";
-import { exportToSvg } from "../scene/export";
+import oc from "open-color";
+import React, { useEffect, useRef, useState } from "react";
 import { close } from "../components/icons";
-
-import "./LibraryUnit.scss";
-import { t } from "../i18n";
-import useIsMobile from "../is-mobile";
-import { LibraryItem } from "../types";
 import { MIME_TYPES } from "../constants";
+import { t } from "../i18n";
+import { useIsMobile } from "../components/App";
+import { exportToSvg } from "../scene/export";
+import { LibraryItem } from "../types";
+import "./LibraryUnit.scss";
 
 // fa-plus
 const PLUS_ICON = (
@@ -36,22 +36,27 @@ export const LibraryUnit = ({
     if (!elementsToRender) {
       return;
     }
-    const svg = exportToSvg(elementsToRender, {
-      exportBackground: false,
-      viewBackgroundColor: "#fff",
-      shouldAddWatermark: false,
-    });
-    for (const child of ref.current!.children) {
-      if (child.tagName !== "svg") {
-        continue;
-      }
-      ref.current!.removeChild(child);
-    }
-    ref.current!.appendChild(svg);
-
+    let svg: SVGSVGElement;
     const current = ref.current!;
+
+    (async () => {
+      svg = await exportToSvg(elementsToRender, {
+        exportBackground: false,
+        viewBackgroundColor: oc.white,
+      });
+      for (const child of ref.current!.children) {
+        if (child.tagName !== "svg") {
+          continue;
+        }
+        current!.removeChild(child);
+      }
+      current!.appendChild(svg);
+    })();
+
     return () => {
-      current.removeChild(svg);
+      if (svg) {
+        current.removeChild(svg);
+      }
     };
   }, [elements, pendingElements]);
 
